@@ -72,7 +72,7 @@ function Game() {
     };
     return (
         <div >
-            <img src="https://c8.alamy.com/comp/2GGD3MM/tic-tac-toe-game-texture-hand-drawn-seamless-cross-shapes-pattern-black-elements-on-white-background-2GGD3MM.jpg"/>
+            <img src="https://c8.alamy.com/comp/2GGD3MM/tic-tac-toe-game-texture-hand-drawn-seamless-cross-shapes-pattern-black-elements-on-white-background-2GGD3MM.jpg" alt="bg image"/>
             <h1>Multiplayer Tic-Tac-Toe</h1>
             <Board squares={gameState.board} onClick={handleClick} />
             <div className="">{renderStatusMessage()}</div>
