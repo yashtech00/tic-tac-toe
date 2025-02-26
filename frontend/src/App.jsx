@@ -1,7 +1,7 @@
 import Game from "./Game";
 
 function App() {
-  return <div>
+  return <div className="app">
     <Game/>
   </div>
 }

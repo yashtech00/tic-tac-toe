@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
+import Board from './Board';
 
 const socket = io('http://localhost:3000');
 
@@ -8,10 +9,9 @@ function Game() {
   const [gameState, setGameState] = useState({
     board: Array(9).fill(null),
     xIsNext: true,
-    winner: null
   });
   const [winner,setWinner] = useState(null);
-  const [gameOver, setGameOver] = useEffect(false);
+  const [gameOver, setGameOver] = useState(false);
   useEffect(() => {
     socket.on('gameState', (state) => {
       setGameState(state);
@@ -19,17 +19,19 @@ function Game() {
       if (gameWinner) {
         setWinner(gameWinner);
         setGameOver(true);
-      } else if (isBoardFull) {
+      } else if (isBoardFull(state.board)) {
         setWinner('Tie');
         setGameOver(true)
       }
     });
 
-    return () => { socket.off('gameState') };
+      return () => {
+          socket.off('gameState')
+      };
   }, []);
 
   const handleClick = (index) => {
-    if (gameState.board[index] || gameState.winner) { return };
+    if (gameState.board[index] || gameOver) { return };
     socket.emit('makeMove', index);
   };
    
@@ -53,7 +55,7 @@ function Game() {
     return null;
   }
 
-  const isBoardfull = (board) => {
+  const isBoardFull = (board) => {
     return board.every((cell) => cell !== null);
   };
 
@@ -74,11 +76,11 @@ function Game() {
     <div>
       <h1>Multiplayer Tic-Tac-Toe</h1>
       <Board squares={gameState.board} onClick={handleClick} />
-      <div>
+      <div >
         {renderStatusMessage()}
       </div>
       {gameOver && (
-        <button onClick={handleRestart}>Restart Game</button>
+        <button onClick={handleRestart} className='restart-button'>Restart Game</button>
       )}
       
     </div>
