@@ -66,6 +66,12 @@ io.on('connection', (socket) => {
 
         pubClient.publish('game-moves', JSON.stringify(gameState));
         io.emit('gameState', gameState);
+
+
+
+        if (calculateWinner(gameState.board) || isBoardFull(gameState.board)) {
+            io.emit('gameOver', gameState); 
+        }
     });
 
     // handle game restart
@@ -99,5 +105,8 @@ function isBoardFull(board) {
     return board.every((cell) => cell !== null);
 }
 
+server.listen(3000, () => {
+    console.log(`websocket server running on port ${3000}`);    
+})
 
 
