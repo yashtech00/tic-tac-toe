@@ -3,6 +3,8 @@ import io from "socket.io-client";
 import Board from "../components/Board";
 import { Button, Stack, TextField, Typography } from "@mui/material";
 import copy from "copy-to-clipboard";
+import { toast } from "react-toastify";
+import { Copy } from "lucide-react";
 
 const socket = io("http://localhost:3000");
 
@@ -27,6 +29,10 @@ function Game() {
     let copyText = textRef.current.value;
     // Adding text value to clipboard using copy function
     let isCopy = copy(copyText);
+    //Dispalying notification
+    if (isCopy) {
+      toast.success("Copied to Clipboard");
+    }
     
   };
   const handleMessage = (e) => {
@@ -131,9 +137,12 @@ function Game() {
             <div>
               <div>
                 <h5 className="text-center italic text-gray-500 mb-2">Send Your Id to Opponent</h5>
-                  <div className="bg-cyan-800 p-4 rounded-lg text-white">Your Room Id :  
-                  <input value={socketId} disabled type="text" ref={textRef}  />
-                    <button onClick={copyToClipboard}>Copy</button>
+                  <div className="bg-cyan-800 p-4 rounded-lg text-white">Your Room Id :   
+                  <input value={socketId} disabled type="text" ref={textRef} className="bg-cyan-800 px-4"/>
+                    <button onClick={copyToClipboard}>
+                      
+                      <Copy />
+                    </button>
                     </div>
                 <h5 className="text-center italic text-gray-500 my-2">Set Opponent Id here</h5>
                 <h5 className="mb-2 font-medium"> Set Room </h5>
