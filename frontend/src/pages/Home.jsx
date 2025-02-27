@@ -6,14 +6,6 @@ import { io } from "socket.io-client";
 const socket = io("http://localhost:3000");
 
 export default function Home() {
-  const [room, setRoom] = useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    socket.emit("join-room", room);
-    setRoom("");
-  };
-
   return (
     <div className="h-screen flex justify-center bg-gray-100 ">
       <div className="">
@@ -32,20 +24,14 @@ export default function Home() {
         <div className="text-center">
           the timeless joy of this classic game!
         </div>
-        <form onSubmit={handleSubmit}>
-          <div className="text-center  ">
-            <Input
-              placeholder="Enter your name"
-              value={room}
-              onChange={(e) => setRoom(e.target.value)}
-            />
-            <Link to={"/Game"}>
-              <button className="text-white text-3xl bg-cyan-900 p-4 m-4 hover:bg-cyan-700">
-                New Game
-              </button>
-            </Link>
-          </div>
-        </form>
+
+        <div className="text-center  ">
+          <Link to={"/Game"}>
+            <button className="text-white text-3xl bg-cyan-900 p-4 m-4 hover:bg-cyan-700">
+              New Game
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );

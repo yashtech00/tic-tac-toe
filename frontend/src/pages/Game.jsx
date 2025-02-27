@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
 import Board from "../components/Board";
-import { Button, TextField } from "@mui/material";
+import { Button, Stack, TextField, Typography } from "@mui/material";
 
 const socket = io("http://localhost:3000");
 
@@ -12,8 +12,29 @@ function Game() {
   });
   const [winner, setWinner] = useState(null);
   const [gameOver, setGameOver] = useState(false);
+  const [room, setRoom] = useState("");
+  const [msg, setMsg] = useState([]);
+  const [message, setMessage] = useState("");
+  const [socketId, setSocketId] = useState("");
+  
+  const handleMessage = (e) => {
+    e.preventDefault();
+    socket.emit("chatmsg", { room, message });
+    setMessage("");
+  };
 
+  const joinRoomHandler = (e) => {
+    e.preventDefault();
+    socket.emit("join-room", roomName);
+    setRoomName("");
+  };
   useEffect(() => {
+
+    socket.on("connect", () => {
+      setSocketId(socket.id);
+      console.log("connected", socket.id);
+    });
+    
     socket.on("gameState", (state) => {
       setGameState(state);
       const gameWinner = calculateWinner(state.board);
@@ -25,7 +46,10 @@ function Game() {
         setGameOver(true);
       }
     });
-
+    socket.on("receive-msg", (data) => {
+      console.log(data, "yashdataa");
+      setMsg((msg) => [...msg, data]);
+    });
     return () => {
       socket.off("gameState");
     };
@@ -83,35 +107,68 @@ function Game() {
 
   return (
     <div className="h-screen flex items-center justify-center bg-gray-100 ">
-    <div className="flex flex-col items-center   ">
-      <h1 className=" text-4xl font-extrabold text-orange-500">X O</h1>
-      <div className="bg-white rounded-lg m-6 flex justify-between p-6 gap-32">
-      <div className="">
-      <Board squares={gameState.board} onClick={handleClick} />
-      </div>
-      <div>
-        chat
-        <TextField id="filled-basic" label="Filled" variant="filled" />
-        <Button variant="contained">Send</Button>
-      </div>
-      </div>
-    
-      <div className="status mb-4 text-2xl">{renderStatusMessage()}</div>
-      <div className="flex justify-center mt-4">
-        {gameOver && (
-          <button
-            onClick={handleRestart}
-            className="bg-blue-500 text-white py-2 px-4 rounded-md 
+      <div className="flex flex-col items-center   ">
+        <h1 className=" text-4xl font-extrabold text-orange-500">X O</h1>
+        <div className="bg-white rounded-lg m-6 flex justify-between p-6 gap-32">
+          <div className="">
+            <Board squares={gameState.board} onClick={handleClick} />
+          </div>
+          {/* <form onSubmit={joinRoomHandler}>
+            <h5> Join Room </h5>
+            <TextField
+              label="Room Name"
+              value={roomName}
+              onChange={(e) => setRoomName(e.target.value)}
+            />
+            <Button type="submit">join</Button>
+          </form> */}
+          <form onSubmit={handleMessage}>
+            <div>
+              <div>
+                <h5>Your Room Id : {socketId}</h5>
+                <h5> Set Room </h5>
+                <TextField
+                  label="Room Name"
+                  value={room}
+                  onChange={(e) => setRoom(e.target.value)}
+                />
+              </div>
+              <div>
+                <Stack className="h-[200px]">
+                  {msg.map((m, i) => (
+                    <Typography key={i}>{m}</Typography>
+                  ))}
+                </Stack>
+              </div>
+
+              <input
+                placeholder="Enter message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
+              <Button variant="contained" type="submit">
+                Send
+              </Button>
+            </div>
+          </form>
+        </div>
+
+        <div className="status mb-4 text-2xl">{renderStatusMessage()}</div>
+        <div className="flex justify-center mt-4">
+          {gameOver && (
+            <button
+              onClick={handleRestart}
+              className="bg-blue-500 text-white py-2 px-4 rounded-md 
                 hover:bg-blue-600 focus:outline-none focus:ring-2 
                 focus:ring-blue-600 focus:ring-offset-2 transition 
                 duration-300 ease-in-out transform hover:scale-105"
-          >
-            Restart Game
-          </button>
-        )}
+            >
+              Restart Game
+            </button>
+          )}
+        </div>
       </div>
-      </div>
-      </div>
+    </div>
   );
 }
 

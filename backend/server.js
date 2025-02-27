@@ -44,12 +44,14 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("chatmsg", ({ room, msg }) => {
-    io.to(room).emit("receive-msg", msg);
+  socket.on("chatmsg", ({ room, message }) => {
+    console.log({ room, message },"yash");
+    
+    io.to(room).emit("receive-msg", message);
   });
   socket.on("join-room", (room) => {
     socket.join(room);
-    console.log(`connected to room ${room}`);
+    console.log(`${socket.id} : join to room ${room}`);
     
   });
   socket.on("restartGame", () => {
