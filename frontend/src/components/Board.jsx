@@ -1,15 +1,14 @@
-import React from 'react';
-import Square from "./Square";
+import Square from "./Square"
 
 function Board({ squares, onClick }) {
   return (
-    
-    <div className="grid grid-cols-3 gap-2 mb-4">
+    <div className="grid grid-cols-3 gap-1 sm:gap-2 w-full max-w-[300px] mx-auto">
       {squares.map((square, i) => (
         <Square key={i} value={square} onClick={() => onClick(i)} />
       ))}
-      </div>
-  );
+    </div>
+  )
 }
 
-export default Board;
+export default Board
+

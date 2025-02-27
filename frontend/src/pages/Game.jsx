@@ -1,86 +1,163 @@
-import React, { useEffect, useRef, useState } from "react";
-import io from "socket.io-client";
-import Board from "../components/Board";
-import { Button, Stack, TextField, Typography } from "@mui/material";
-import copy from "copy-to-clipboard";
-import { toast } from "react-toastify";
-import { Copy } from "lucide-react";
+"use client"
 
-const socket = io("http://localhost:3000");
+import { useEffect, useRef, useState } from "react"
+import io from "socket.io-client"
+import Board from "../components/Board"
+import { TextField, Typography, Stack } from "@mui/material"
+import copy from "copy-to-clipboard"
+import { toast } from "react-toastify"
+import { Copy } from "lucide-react"
+
+const socket = io("http://localhost:3000")
 
 function Game() {
   const [gameState, setGameState] = useState({
     board: Array(9).fill(null),
     xIsNext: true,
-  });
-  const [winner, setWinner] = useState(null);
-  const [gameOver, setGameOver] = useState(false);
-  const [room, setRoom] = useState("");
-  const [msg, setMsg] = useState([]);
-  const [message, setMessage] = useState("");
-  
-  const [socketId, setSocketId] = useState("");
-  console.log(message, "yash message");
-  const textRef = useRef();
+  })
+  const [winner, setWinner] = useState(null)
+  const [gameOver, setGameOver] = useState(false)
+  const [room, setRoom] = useState("")
+  const [msg, setMsg] = useState([])
+  const [message, setMessage] = useState("")
+  const [socketId, setSocketId] = useState("")
+  const [isConnected, setIsConnected] = useState(false)
+  const [joinedRoom, setJoinedRoom] = useState(false)
 
-  //Function to add text to clipboard
+  const textRef = useRef()
+
+  // Function to add text to clipboard
   const copyToClipboard = () => {
-    // Text from the html element
-    let copyText = textRef.current.value;
-    // Adding text value to clipboard using copy function
-    let isCopy = copy(copyText);
-    //Dispalying notification
+    const copyText = textRef.current.value
+    const isCopy = copy(copyText)
     if (isCopy) {
-      toast.success("Copied to Clipboard");
+      toast.success("Room ID copied to clipboard!", {
+        icon: "📋",
+      })
     }
-    
-  };
+  }
+
   const handleMessage = (e) => {
-    e.preventDefault();
-    socket.emit("message", { message,room });
-    setMessage("");
-  };
+    e.preventDefault()
+    if (!message.trim()) {
+      toast.error("Message cannot be empty")
+      return
+    }
 
-  
+    if (!room) {
+      toast.error("Please enter a room ID first")
+      return
+    }
+
+    socket.emit("message", { message, room })
+    toast.info("Message sent", {
+      icon: "💬",
+      autoClose: 2000,
+    })
+    setMessage("")
+  }
+
+  const handleJoinRoom = () => {
+    if (!room.trim()) {
+      toast.error("Please enter a room ID")
+      return
+    }
+
+    socket.emit("joinRoom", room)
+    setJoinedRoom(true)
+    toast.success(`Joined room: ${room}`, {
+      icon: "🚪",
+    })
+  }
+
   useEffect(() => {
-
     socket.on("connect", () => {
-      setSocketId(socket.id);
-      console.log("connected", socket.id);
-    });
-    
+      setSocketId(socket.id)
+      setIsConnected(true)
+      toast.success("Connected to server!", {
+        icon: "🔌",
+      })
+    })
+
+    socket.on("disconnect", () => {
+      setIsConnected(false)
+      toast.error("Disconnected from server", {
+        icon: "🔌",
+      })
+    })
+
     socket.on("gameState", (state) => {
-      setGameState(state);
-      const gameWinner = calculateWinner(state.board);
+      setGameState(state)
+      const gameWinner = calculateWinner(state.board)
       if (gameWinner) {
-        setWinner(gameWinner);
-        setGameOver(true);
+        setWinner(gameWinner)
+        setGameOver(true)
+        toast.success(`Player ${gameWinner} wins!`, {
+          icon: "🏆",
+        })
       } else if (isBoardFull(state.board)) {
-        setWinner("Tie");
-        setGameOver(true);
+        setWinner("Tie")
+        setGameOver(true)
+        toast.info("Game ended in a tie!", {
+          icon: "🤝",
+        })
       }
-    });
+    })
+
     socket.on("receive-msg", (data) => {
-      console.log(data, "yashdataa");
-      setMsg((msg) => [...msg, data]);
-    });
+      setMsg((msg) => [...msg, data])
+      toast.info("New message received", {
+        icon: "📩",
+        autoClose: 2000,
+      })
+    })
+
+    socket.on("playerJoined", (playerId) => {
+      toast.success(`Player ${playerId} joined the game!`, {
+        icon: "👋",
+      })
+    })
+
+    socket.on("playerLeft", (playerId) => {
+      toast.info(`Player ${playerId} left the game`, {
+        icon: "👋",
+      })
+    })
+
+    socket.on("error", (errorMsg) => {
+      toast.error(errorMsg)
+    })
+
     return () => {
-      socket.off("gameState");
-    };
-  }, []);
+      socket.off("gameState")
+      socket.off("receive-msg")
+      socket.off("playerJoined")
+      socket.off("playerLeft")
+      socket.off("error")
+    }
+  }, [])
 
   const handleClick = (index) => {
     if (gameState.board[index] || gameOver) {
-      return;
+      return
     }
-    socket.emit("makeMove", index);
-  };
+
+    if (!joinedRoom) {
+      toast.warning("Please join a room first")
+      return
+    }
+
+    socket.emit("makeMove", index)
+  }
 
   const handleRestart = () => {
-    socket.emit("restartGame");
-    setWinner(null);
-    setGameOver(false);
-  };
+    socket.emit("restartGame")
+    setWinner(null)
+    setGameOver(false)
+    toast.info("Game restarted", {
+      icon: "🔄",
+    })
+  }
 
   const calculateWinner = (squares) => {
     const lines = [
@@ -92,110 +169,129 @@ function Game() {
       [2, 5, 8],
       [0, 4, 8],
       [2, 4, 6],
-    ];
-    for (let [a, b, c] of lines) {
-      if (
-        squares[a] &&
-        squares[a] === squares[b] &&
-        squares[a] === squares[c]
-      ) {
-        return squares[a];
+    ]
+    for (const [a, b, c] of lines) {
+      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+        return squares[a]
       }
     }
-    return null;
-  };
+    return null
+  }
 
   const isBoardFull = (board) => {
-    return board.every((cell) => cell !== null);
-  };
+    return board.every((cell) => cell !== null)
+  }
 
   const renderStatusMessage = () => {
     if (winner === "Tie") {
-      return <h2>It's a tie</h2>;
+      return <h2>It's a tie</h2>
     } else if (winner) {
-      return <h2>Winner : {winner}</h2>;
+      return <h2>Winner: {winner}</h2>
     } else {
-      return <h2>Next Player: {gameState.xIsNext ? "X" : "O"}</h2>;
+      return <h2>Next Player: {gameState.xIsNext ? "X" : "O"}</h2>
     }
-  };
+  }
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-100 ">
-      <div className="flex flex-col items-center   ">
-        <h1 className=" text-4xl font-extrabold text-cyan-900  ">Tic Tac Toe</h1>
-        
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="flex flex-col items-center w-full max-w-6xl">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-cyan-900 mb-4">Tic Tac Toe</h1>
 
-
-
-        <div className="bg-white rounded-lg m-6 p-8 ">
-        <div className=" flex justify-between gap-32">
-          <div className=" flex items-center ">
-            <Board squares={gameState.board} onClick={handleClick} />
-          </div>
-          
-          <form onSubmit={handleMessage}>
-            <div>
-              <div>
-                <h5 className="text-center italic text-gray-500 mb-2">Send Your Id to Opponent</h5>
-                  <div className="bg-cyan-800 p-4 rounded-lg text-white">Your Room Id :   
-                  <input value={socketId} disabled type="text" ref={textRef} className="bg-cyan-800 px-4"/>
-                    <button onClick={copyToClipboard}>
-                      
-                      <Copy />
-                    </button>
-                    </div>
-                <h5 className="text-center italic text-gray-500 my-2">Set Opponent Id here</h5>
-                <h5 className="mb-2 font-medium"> Set Room </h5>
-                <TextField
-                  label="Room Name"
-                  value={room}
-                    onChange={(e) => setRoom(e.target.value)}
-                    fullWidth
-                />
-              </div>
-              <div className="border-2 overflow-auto border-gray-200 mt-4">
-              <div>
-                <Stack className="h-[200px]">
-                  {msg.map((m, i) => (
-                    <Typography key={i}>{m}</Typography>
-                  ))}
-                </Stack>
-              </div>
-
-              <input
-                  placeholder="Message " 
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="border-2 border-cyan-800 p-4"
-                  
-                />
-              <button  type="submit" className=" p-4 px-10 bg-cyan-900 text-white">
-                Send
-                </button>
-                </div>
+        <div className="bg-white rounded-lg shadow-lg w-full p-4 sm:p-6 md:p-8">
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:gap-8">
+            <div className="flex items-center justify-center mb-8 lg:mb-0">
+              <Board squares={gameState.board} onClick={handleClick} />
             </div>
-          </form>
-        </div>
-        <div className="status mb-4 mt-6 font-semibold text-2xl text-center">{renderStatusMessage()}</div>
-        <div className="flex justify-center mt-4 ">
-          {gameOver && (
-            <button
-              onClick={handleRestart}
-              className="bg-cyan-900 text-white py-2 px-4 rounded-md 
+
+            <div className="w-full lg:w-1/2">
+              <div>
+                <div>
+                  <h5 className="text-center italic text-gray-500 mb-2">Send Your Id to Opponent</h5>
+                  <div className="bg-cyan-800 p-3 rounded-lg text-white flex items-center flex-wrap gap-2">
+                    <span>Your Room Id:</span>
+                    <div className="flex-1 flex items-center">
+                      <input
+                        value={socketId}
+                        disabled
+                        type="text"
+                        ref={textRef}
+                        className="bg-cyan-800 px-2 flex-1 min-w-0 truncate"
+                      />
+                      <button type="button" onClick={copyToClipboard} className="p-1 hover:bg-cyan-700 rounded">
+                        <Copy size={18} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <h5 className="text-center italic text-gray-500 my-2">Set Opponent Id here</h5>
+                  <div className="flex items-center gap-2">
+                    <TextField
+                      label="Room Name"
+                      value={room}
+                      onChange={(e) => setRoom(e.target.value)}
+                      fullWidth
+                      size="small"
+                    />
+                    <button
+                      onClick={handleJoinRoom}
+                      className="whitespace-nowrap bg-cyan-900 text-white py-2 px-3 rounded hover:bg-cyan-700 transition-colors"
+                    >
+                      Join Room
+                    </button>
+                  </div>
+                </div>
+
+                <form onSubmit={handleMessage} className="mt-4">
+                  <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
+                    <div>
+                      <Stack className="h-[150px] sm:h-[200px] p-2 overflow-auto">
+                        {msg.map((m, i) => (
+                          <Typography key={i} variant="body2">
+                            {m}
+                          </Typography>
+                        ))}
+                      </Stack>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row">
+                      <input
+                        placeholder="Message"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className="border-t-2 border-cyan-800 p-2 sm:p-3 flex-1"
+                      />
+                      <button type="submit" className="p-2 sm:p-3 px-4 sm:px-6 bg-cyan-900 text-white">
+                        Send
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div className="status my-4 font-semibold text-xl sm:text-2xl text-center text-cyan-900">
+            {renderStatusMessage()}
+          </div>
+
+          <div className="flex justify-center mt-4">
+            {gameOver && (
+              <button
+                onClick={handleRestart}
+                className="bg-cyan-900 text-white py-2 px-6 rounded-md 
                 hover:bg-cyan-800 focus:outline-none focus:ring-2 
                 focus:ring-cyan-800 focus:ring-offset-2 transition 
                 duration-300 ease-in-out transform hover:scale-105"
-            >
-              Restart Game
-            </button>
-          )}
+              >
+                Restart Game
+              </button>
+            )}
+          </div>
         </div>
-        </div>
-
-       
       </div>
     </div>
-  );
+  )
 }
 
-export default Game;
+export default Game
+
