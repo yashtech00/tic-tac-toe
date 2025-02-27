@@ -15,10 +15,12 @@
     "@mui/material": "^6.4.6",
     "@mui/styled-engine-sc": "^6.4.6",
     "@tailwindcss/vite": "^4.0.9",
+    "copy-to-clipboard": "^3.3.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^6.29.0",
     "react-router-dom": "^6.29.0",
+    "react-toastify": "^11.0.5",
     "socket.io-client": "^4.8.1",
     "styled-components": "^6.1.15"
   },

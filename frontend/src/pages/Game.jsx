@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import Board from "../components/Board";
 import { Button, Stack, TextField, Typography } from "@mui/material";
+import copy from "copy-to-clipboard";
 
 const socket = io("http://localhost:3000");
 
@@ -18,7 +19,16 @@ function Game() {
   
   const [socketId, setSocketId] = useState("");
   console.log(message, "yash message");
+  const textRef = useRef();
 
+  //Function to add text to clipboard
+  const copyToClipboard = () => {
+    // Text from the html element
+    let copyText = textRef.current.value;
+    // Adding text value to clipboard using copy function
+    let isCopy = copy(copyText);
+    
+  };
   const handleMessage = (e) => {
     e.preventDefault();
     socket.emit("message", { message,room });
@@ -106,23 +116,32 @@ function Game() {
   return (
     <div className="h-screen flex items-center justify-center bg-gray-100 ">
       <div className="flex flex-col items-center   ">
-        <h1 className=" text-4xl font-extrabold text-orange-500">X O</h1>
-        <div className="bg-white rounded-lg m-6 flex justify-between p-6 gap-32">
-          <div className=" flex items-center">
+        <h1 className=" text-4xl font-extrabold text-cyan-900  ">Tic Tac Toe</h1>
+        
+
+
+
+        <div className="bg-white rounded-lg m-6 p-8 ">
+        <div className=" flex justify-between gap-32">
+          <div className=" flex items-center ">
             <Board squares={gameState.board} onClick={handleClick} />
           </div>
           
           <form onSubmit={handleMessage}>
             <div>
               <div>
-                <h5 className="text-center italic text-gray-500">Send Your Id to Opponent</h5>
-                <h5 className="bg-cyan-800 p-4 rounded-lg text-white">Your Room Id :  {socketId}</h5>
-                <h5 className="text-center italic text-gray-500">Set Opponent Id here</h5>
-                <h5> Set Room </h5>
+                <h5 className="text-center italic text-gray-500 mb-2">Send Your Id to Opponent</h5>
+                  <div className="bg-cyan-800 p-4 rounded-lg text-white">Your Room Id :  
+                  <input value={socketId} disabled type="text" ref={textRef}  />
+                    <button onClick={copyToClipboard}>Copy</button>
+                    </div>
+                <h5 className="text-center italic text-gray-500 my-2">Set Opponent Id here</h5>
+                <h5 className="mb-2 font-medium"> Set Room </h5>
                 <TextField
                   label="Room Name"
                   value={room}
-                  onChange={(e) => setRoom(e.target.value)}
+                    onChange={(e) => setRoom(e.target.value)}
+                    fullWidth
                 />
               </div>
               <div className="border-2 overflow-auto border-gray-200 mt-4">
@@ -138,30 +157,33 @@ function Game() {
                   placeholder="Message " 
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
+                  className="border-2 border-cyan-800 p-4"
                   
                 />
-              <button  type="submit" className="p-4 bg-cyan-900 text-white">
+              <button  type="submit" className=" p-4 px-10 bg-cyan-900 text-white">
                 Send
                 </button>
                 </div>
             </div>
           </form>
         </div>
-
-        <div className="status mb-4 text-2xl">{renderStatusMessage()}</div>
-        <div className="flex justify-center mt-4">
+        <div className="status mb-4 mt-6 font-semibold text-2xl text-center">{renderStatusMessage()}</div>
+        <div className="flex justify-center mt-4 ">
           {gameOver && (
             <button
               onClick={handleRestart}
-              className="bg-blue-500 text-white py-2 px-4 rounded-md 
-                hover:bg-blue-600 focus:outline-none focus:ring-2 
-                focus:ring-blue-600 focus:ring-offset-2 transition 
+              className="bg-cyan-900 text-white py-2 px-4 rounded-md 
+                hover:bg-cyan-800 focus:outline-none focus:ring-2 
+                focus:ring-cyan-800 focus:ring-offset-2 transition 
                 duration-300 ease-in-out transform hover:scale-105"
             >
               Restart Game
             </button>
           )}
         </div>
+        </div>
+
+       
       </div>
     </div>
   );
