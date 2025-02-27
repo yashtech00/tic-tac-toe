@@ -44,10 +44,10 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("chatmsg", ({ room, message }) => {
+  socket.on("message", ({ room, message }) => {
     console.log({ room, message },"yash");
     
-    io.to(room).emit("receive-msg", message);
+    io.broadcast.to(room).emit("receive-msg", message);
   });
   socket.on("join-room", (room) => {
     socket.join(room);

@@ -15,19 +15,17 @@ function Game() {
   const [room, setRoom] = useState("");
   const [msg, setMsg] = useState([]);
   const [message, setMessage] = useState("");
-  const [socketId, setSocketId] = useState("");
   
+  const [socketId, setSocketId] = useState("");
+  console.log(message, "yash message");
+
   const handleMessage = (e) => {
     e.preventDefault();
-    socket.emit("chatmsg", { room, message });
+    socket.emit("message", { message,room });
     setMessage("");
   };
 
-  const joinRoomHandler = (e) => {
-    e.preventDefault();
-    socket.emit("join-room", roomName);
-    setRoomName("");
-  };
+  
   useEffect(() => {
 
     socket.on("connect", () => {
@@ -110,22 +108,16 @@ function Game() {
       <div className="flex flex-col items-center   ">
         <h1 className=" text-4xl font-extrabold text-orange-500">X O</h1>
         <div className="bg-white rounded-lg m-6 flex justify-between p-6 gap-32">
-          <div className="">
+          <div className=" flex items-center">
             <Board squares={gameState.board} onClick={handleClick} />
           </div>
-          {/* <form onSubmit={joinRoomHandler}>
-            <h5> Join Room </h5>
-            <TextField
-              label="Room Name"
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
-            />
-            <Button type="submit">join</Button>
-          </form> */}
+          
           <form onSubmit={handleMessage}>
             <div>
               <div>
-                <h5>Your Room Id : {socketId}</h5>
+                <h5 className="text-center italic text-gray-500">Send Your Id to Opponent</h5>
+                <h5 className="bg-cyan-800 p-4 rounded-lg text-white">Your Room Id :  {socketId}</h5>
+                <h5 className="text-center italic text-gray-500">Set Opponent Id here</h5>
                 <h5> Set Room </h5>
                 <TextField
                   label="Room Name"
@@ -133,6 +125,7 @@ function Game() {
                   onChange={(e) => setRoom(e.target.value)}
                 />
               </div>
+              <div className="border-2 overflow-auto border-gray-200 mt-4">
               <div>
                 <Stack className="h-[200px]">
                   {msg.map((m, i) => (
@@ -142,13 +135,15 @@ function Game() {
               </div>
 
               <input
-                placeholder="Enter message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-              <Button variant="contained" type="submit">
+                  placeholder="Message " 
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  
+                />
+              <button  type="submit" className="p-4 bg-cyan-900 text-white">
                 Send
-              </Button>
+                </button>
+                </div>
             </div>
           </form>
         </div>
