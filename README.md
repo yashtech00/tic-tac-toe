@@ -57,3 +57,8 @@ To get a local copy up and running, follow these steps:
 - Create an account or log in to your existing account. 
 - Start a new game and invite an opponent using the chat feature.
 - Enjoy playing Tic-Tac-Toe and chatting in real time!
+
+## Demo 
+![Screenshot 2025-04-16 020141](https://github.com/user-attachments/assets/faaf5c23-521d-40f3-b599-8077ac4e634f)
+![Screenshot 2025-04-16 020540](https://github.com/user-attachments/assets/1509bccf-6729-4706-879b-13b1f835546e)
+
