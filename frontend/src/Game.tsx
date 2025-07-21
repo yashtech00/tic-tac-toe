@@ -4,6 +4,7 @@ import { io } from "socket.io-client";
 import Board from "./Board";
 import { Button } from "@material-tailwind/react";
 
+
 const socket = io('http://localhost:3000')
 function Game() {
 
@@ -12,7 +13,7 @@ function Game() {
         xIsNext: true,
     });
     const [gameOver, setGameOver] = useState(false);
-    const [winner, setWinner] = useState(null);
+    const [winner, setWinner] = useState<string | null>(null);
 
     useEffect(() => {
         socket.on('gameState', (state) => {
@@ -78,7 +79,7 @@ function Game() {
             <div className="">{renderStatusMessage()}</div>
 
             {gameOver && (
-                <Button  onClick={handleRestart} className="restart-button">Restart Game</Button>
+                <button  onClick={handleRestart} className="restart-button">Restart Game</button>
             )}
 
 
